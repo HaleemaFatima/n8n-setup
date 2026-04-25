@@ -1,4 +1,4 @@
-# 🔥 My Complete n8n Setup Journey
+# My Complete n8n Setup Journey
 
 > A fully documented, beginner friendly guide to building a real AI automation system with n8n 
 
