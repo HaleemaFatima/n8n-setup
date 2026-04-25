@@ -35,12 +35,6 @@ No build tools. No npm. No frameworks. Just one HTML file — open it in a brows
 
 ---
 
-## 🚀 Live on GitHub Pages
-
- **site is live** at:
-   ```
-   https://haleemafatima.github.io/n8n-setup/
-   ```
    
 ---
 
