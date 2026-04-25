@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My n8n Setup Journey</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #111118;
+      --surface2: #18181f;
+      --border: #2a2a38;
+      --accent: #ff6b35;
+      --accent2: #7c3aed;
+      --accent3: #06b6d4;
+      --green: #10b981;
+      --yellow: #f59e0b;
+      --red: #ef4444;
+      --text: #e8e8f0;
+      --muted: #7070a0;
+      --faint: #2e2e42;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    /* ── NOISE OVERLAY ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.4;
+    }
+
+    /* ── GLOW BLOBS ── */
+    .blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.12;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .blob-1 { width: 600px; height: 600px; background: var(--accent2); top: -200px; right: -200px; }
+    .blob-2 { width: 400px; height: 400px; background: var(--accent); bottom: 10%; left: -150px; }
+    .blob-3 { width: 350px; height: 350px; background: var(--accent3); top: 50%; left: 40%; }
+
+    /* ── TOP NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 40px;
+      background: rgba(10,10,15,0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 18px;
+      color: var(--accent);
+      letter-spacing: -0.5px;
+    }
+    .nav-links {
+      display: flex;
+      gap: 28px;
+      list-style: none;
+    }
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+    .nav-badge {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      background: var(--faint);
+      color: var(--accent3);
+      border: 1px solid var(--border);
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+
+    /* ── LAYOUT ── */
+    main {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 120px 32px 80px;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      padding-bottom: 80px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 80px;
+    }
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--accent3);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+    .hero-eyebrow::before {
+      content: '';
+      display: block;
+      width: 28px; height: 1px;
+      background: var(--accent3);
+    }
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(40px, 6vw, 72px);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -2px;
+      color: #fff;
+      margin-bottom: 24px;
+    }
+    h1 span { color: var(--accent); }
+    .hero-sub {
+      font-size: 18px;
+      color: var(--muted);
+      max-width: 560px;
+      font-weight: 300;
+      line-height: 1.6;
+      margin-bottom: 40px;
+    }
+    .hero-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .tag {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      padding: 6px 14px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      background: var(--surface);
+      transition: all 0.2s;
+    }
+    .tag:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── TOC ── */
+    .toc {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px;
+      margin-bottom: 80px;
+      position: relative;
+      overflow: hidden;
+    }
+    .toc::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: linear-gradient(to bottom, var(--accent), var(--accent2));
+    }
+    .toc-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+    .toc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 8px;
+    }
+    .toc-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text);
+      font-size: 14px;
+      padding: 8px 10px;
+      border-radius: 6px;
+      transition: background 0.15s;
+    }
+    .toc-item:hover { background: var(--faint); color: #fff; }
+    .toc-num {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--accent);
+      min-width: 22px;
+    }
+
+    /* ── SECTIONS ── */
+    section {
+      margin-bottom: 72px;
+      animation: fadeUp 0.5s ease both;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .section-label {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    .section-num {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--accent);
+      background: rgba(255,107,53,0.1);
+      border: 1px solid rgba(255,107,53,0.3);
+      padding: 4px 10px;
+      border-radius: 4px;
+    }
+    h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(24px, 3.5vw, 36px);
+      font-weight: 700;
+      letter-spacing: -1px;
+      color: #fff;
+    }
+    h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 12px;
+      margin-top: 28px;
+    }
+
+    p { color: var(--text); margin-bottom: 14px; font-weight: 300; }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px 28px;
+      margin-bottom: 16px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .card:hover { border-color: var(--faint); }
+    .card-accent-left {
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: var(--accent2);
+      border-radius: 2px 0 0 2px;
+    }
+
+    /* ── CONCEPT CARDS ── */
+    .concepts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .concept-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .concept-card:hover { transform: translateY(-2px); border-color: var(--accent2); }
+    .concept-icon {
+      width: 40px; height: 40px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      margin-bottom: 14px;
+    }
+    .concept-term {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+    .concept-def { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+    /* ── TOOLS GRID ── */
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 14px;
+    }
+    .tool-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px 22px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      transition: border-color 0.2s;
+    }
+    .tool-card:hover { border-color: var(--accent3); }
+    .tool-icon {
+      width: 44px; height: 44px; min-width: 44px;
+      border-radius: 10px;
+      background: var(--surface2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+    }
+    .tool-name {
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--accent3);
+      margin-bottom: 4px;
+    }
+    .tool-desc { font-size: 13px; color: var(--muted); }
+
+    /* ── ERRORS ── */
+    .error-card {
+      background: var(--surface);
+      border: 1px solid rgba(239,68,68,0.2);
+      border-radius: 10px;
+      padding: 20px 24px;
+      margin-bottom: 12px;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+    .error-badge {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 4px;
+      background: rgba(239,68,68,0.12);
+      color: var(--red);
+      border: 1px solid rgba(239,68,68,0.25);
+      white-space: nowrap;
+      margin-top: 2px;
+    }
+    .error-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 600;
+      font-size: 15px;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+    .error-detail { font-size: 14px; color: var(--muted); margin-bottom: 8px; }
+    .fix-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--green);
+      background: rgba(16,185,129,0.1);
+      border: 1px solid rgba(16,185,129,0.25);
+      padding: 4px 12px;
+      border-radius: 4px;
+    }
+
+    /* ── CODE BLOCK ── */
+    .code-block {
+      background: #0d0d14;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      color: var(--accent3);
+      margin: 12px 0;
+      overflow-x: auto;
+    }
+    .code-comment { color: #4a4a6a; }
+
+    /* ── WORKFLOW ── */
+    .workflow {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      position: relative;
+      padding-left: 32px;
+    }
+    .workflow::before {
+      content: '';
+      position: absolute;
+      left: 11px; top: 20px; bottom: 20px;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--accent), var(--accent2), var(--accent3));
+      border-radius: 2px;
+    }
+    .workflow-step {
+      position: relative;
+      padding: 12px 0 12px 24px;
+    }
+    .workflow-step::before {
+      content: '';
+      position: absolute;
+      left: -21px; top: 50%;
+      transform: translateY(-50%);
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 2px solid var(--bg);
+      box-shadow: 0 0 8px rgba(255,107,53,0.5);
+    }
+    .step-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 2px;
+    }
+    .step-desc { font-size: 15px; color: var(--text); }
+
+    /* ── LEARNINGS ── */
+    .learning-item {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--faint);
+    }
+    .learning-item:last-child { border-bottom: none; }
+    .learning-icon { font-size: 22px; min-width: 30px; margin-top: 2px; }
+    .learning-text strong {
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: #fff;
+      display: block;
+      margin-bottom: 4px;
+    }
+    .learning-text span { font-size: 14px; color: var(--muted); }
+
+    /* ── SUCCESS BANNER ── */
+    .success-banner {
+      background: linear-gradient(135deg, rgba(16,185,129,0.08), rgba(6,182,212,0.08));
+      border: 1px solid rgba(16,185,129,0.25);
+      border-radius: 14px;
+      padding: 40px;
+      text-align: center;
+      margin: 60px 0;
+    }
+    .success-emoji { font-size: 48px; margin-bottom: 16px; }
+    .success-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+    .success-desc { color: var(--muted); max-width: 440px; margin: 0 auto; font-size: 15px; }
+
+    /* ── BUSINESS USES ── */
+    .use-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .use-chip {
+      font-size: 13px;
+      padding: 8px 16px;
+      border-radius: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .use-chip:hover {
+      background: rgba(124,58,237,0.1);
+      border-color: rgba(124,58,237,0.4);
+      color: #fff;
+    }
+    .use-chip-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent2);
+    }
+
+    /* ── GROWTH CARD ── */
+    .growth-card {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .growth-before, .growth-after {
+      padding: 32px;
+      text-align: center;
+    }
+    .growth-before {
+      background: var(--surface);
+    }
+    .growth-after {
+      background: linear-gradient(135deg, rgba(124,58,237,0.15), rgba(6,182,212,0.1));
+    }
+    .growth-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .growth-before .growth-label { color: var(--muted); }
+    .growth-after .growth-label { color: var(--accent3); }
+    .growth-text {
+      font-family: 'Syne', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      position: relative;
+      z-index: 1;
+      border-top: 1px solid var(--border);
+      padding: 40px 32px;
+      text-align: center;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .footer-closing {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+    .footer-sub { color: var(--muted); font-size: 14px; }
+    .footer-flame { font-size: 28px; }
+
+    /* ── DIVIDER ── */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 60px 0;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 640px) {
+      nav { padding: 14px 20px; }
+      .nav-links { display: none; }
+      main { padding: 100px 20px 60px; }
+      .concepts-grid, .tools-grid { grid-template-columns: 1fr; }
+      .growth-card { grid-template-columns: 1fr; }
+      .error-card { grid-template-columns: 1fr; }
+      .toc-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Staggered animation for cards */
+    .stagger > * { animation: fadeUp 0.4s ease both; }
+    .stagger > *:nth-child(1) { animation-delay: 0.05s; }
+    .stagger > *:nth-child(2) { animation-delay: 0.10s; }
+    .stagger > *:nth-child(3) { animation-delay: 0.15s; }
+    .stagger > *:nth-child(4) { animation-delay: 0.20s; }
+    .stagger > *:nth-child(5) { animation-delay: 0.25s; }
+    .stagger > *:nth-child(6) { animation-delay: 0.30s; }
+    .stagger > *:nth-child(7) { animation-delay: 0.35s; }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient blobs -->
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="nav-logo">n8n Journey</div>
+    <ul class="nav-links">
+      <li><a href="#concepts">Concepts</a></li>
+      <li><a href="#workflow">Workflow</a></li>
+      <li><a href="#errors">Errors</a></li>
+      <li><a href="#learnings">Learnings</a></li>
+    </ul>
+    <span class="nav-badge">Karachi, PK</span>
+  </nav>
+
+  <main>
+
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-eyebrow">Full Technical + Beginner Guide</div>
+      <h1>My Complete <span>n8n</span> Setup Journey</h1>
+      <p class="hero-sub">
+        From zero to a fully working AI-powered automation system — every concept explained, every error documented, every fix recorded.
+      </p>
+      <div class="hero-tags">
+        <span class="tag">n8n</span>
+        <span class="tag">OAuth 2.0</span>
+        <span class="tag">Google APIs</span>
+        <span class="tag">Groq / LLaMA</span>
+        <span class="tag">AI Agents</span>
+        <span class="tag">Automation</span>
+      </div>
+    </section>
+
+    <!-- TABLE OF CONTENTS -->
+    <div class="toc">
+      <div class="toc-title">Contents</div>
+      <div class="toc-grid">
+        <a class="toc-item" href="#intro"><span class="toc-num">01</span> Introduction</a>
+        <a class="toc-item" href="#concepts"><span class="toc-num">02</span> Core Concepts</a>
+        <a class="toc-item" href="#workflow"><span class="toc-num">03</span> Final Workflow</a>
+        <a class="toc-item" href="#tools"><span class="toc-num">04</span> Tools Used</a>
+        <a class="toc-item" href="#commands"><span class="toc-num">05</span> Commands</a>
+        <a class="toc-item" href="#errors"><span class="toc-num">06</span> Errors & Fixes</a>
+        <a class="toc-item" href="#learnings"><span class="toc-num">07</span> What I Learned</a>
+        <a class="toc-item" href="#business"><span class="toc-num">08</span> Business Uses</a>
+        <a class="toc-item" href="#growth"><span class="toc-num">09</span> Growth Summary</a>
+      </div>
+    </div>
+
+    <!-- INTRO -->
+    <section id="intro">
+      <div class="section-label">
+        <span class="section-num">01</span>
+        <h2>Introduction</h2>
+      </div>
+      <div class="card">
+        <div class="card-accent-left"></div>
+        <p>This document covers the full journey of setting up <strong>n8n</strong> for real-world automation work. Every concept is broken down into beginner-friendly language, every error is documented with its root cause, and every fix is explained step by step.</p>
+        <p>By the end, a complete AI-powered workflow was built and running — connecting Gmail, Google Calendar, Google Sheets, OpenWeatherMap, and a local AI agent through a single automated pipeline.</p>
+      </div>
+    </section>
+
+    <!-- CORE CONCEPTS -->
+    <section id="concepts">
+      <div class="section-label">
+        <span class="section-num">02</span>
+        <h2>Core Concepts</h2>
+      </div>
+      <div class="concepts-grid stagger">
+
+        <div class="concept-card">
+          <div class="concept-icon" style="background:rgba(255,107,53,0.12)">⚡</div>
+          <div class="concept-term">n8n</div>
+          <div class="concept-def">An automation platform — like a digital employee that connects apps together and performs tasks automatically. Read Gmail, check weather, send emails, update spreadsheets — all without manual work.</div>
+        </div>
+
+        <div class="concept-card">
+          <div class="concept-icon" style="background:rgba(6,182,212,0.12)">🔌</div>
+          <div class="concept-term">API</div>
+          <div class="concept-def">Application Programming Interface — a bridge that lets one app talk to another. When your workflow asks "What is Karachi weather?", the weather API replies with real data.</div>
+        </div>
+
+        <div class="concept-card">
+          <div class="concept-icon" style="background:rgba(124,58,237,0.12)">🔐</div>
+          <div class="concept-term">OAuth</div>
+          <div class="concept-def">A secure login permission system. Instead of sharing your password, you click "Sign in with Google" — Google safely grants access. Safer, revocable, and limited in scope.</div>
+        </div>
+
+        <div class="concept-card">
+          <div class="concept-icon" style="background:rgba(16,185,129,0.12)">🪪</div>
+          <div class="concept-term">Credential</div>
+          <div class="concept-def">The login connection details used by n8n to connect services — API keys, OAuth tokens, Client IDs, and Client Secrets.</div>
+        </div>
+
+        <div class="concept-card">
+          <div class="concept-icon" style="background:rgba(245,158,11,0.12)">🆔</div>
+          <div class="concept-term">Client ID &amp; Secret</div>
+          <div class="concept-def">Client ID is the app's identity number (like a National ID card for software). Client Secret is its private password — both required during OAuth flows.</div>
+        </div>
+
+        <div class="concept-card">
+          <div class="concept-icon" style="background:rgba(239,68,68,0.12)">↩️</div>
+          <div class="concept-term">Redirect URI</div>
+          <div class="concept-def">After Google login succeeds, the user is sent back to this address:<br><code style="font-family:'DM Mono',monospace;font-size:12px;color:var(--accent3)">localhost:5678/rest/oauth2-credential/callback</code></div>
+        </div>
+
+        <div class="concept-card">
+          <div class="concept-icon" style="background:rgba(255,107,53,0.12)">🗂️</div>
+          <div class="concept-term">Workflow</div>
+          <div class="concept-def">A sequence of connected steps — Trigger → Get weather → Ask AI → Send email. That full chain is one workflow.</div>
+        </div>
+
+        <div class="concept-card">
+          <div class="concept-icon" style="background:rgba(6,182,212,0.12)">🧱</div>
+          <div class="concept-term">Node</div>
+          <div class="concept-def">The building block of n8n. Each app or tool is one node — Gmail node, Calendar node, AI Agent node. Connect them together to build workflows.</div>
+        </div>
+
+        <div class="concept-card">
+          <div class="concept-icon" style="background:rgba(124,58,237,0.12)">🤖</div>
+          <div class="concept-term">AI Agent</div>
+          <div class="concept-def">An AI system that can think AND act — not just chat. It can decide what to do, call APIs, read data, and trigger actions based on reasoning.</div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- FINAL WORKFLOW -->
+    <section id="workflow">
+      <div class="section-label">
+        <span class="section-num">03</span>
+        <h2>Final Workflow Built</h2>
+      </div>
+      <div class="card" style="margin-bottom:28px">
+        <div class="card-accent-left" style="background:var(--accent3)"></div>
+        <h3 style="margin-top:0">🏃 Karachi Running Assistant</h3>
+        <p style="color:var(--muted);font-size:14px">An AI agent that runs every morning, checks conditions, and sends a personalized running recommendation via email.</p>
+      </div>
+      <div class="workflow">
+        <div class="workflow-step">
+          <div class="step-label">Step 1 — Trigger</div>
+          <div class="step-desc">Schedule Trigger fires at chosen time every day</div>
+        </div>
+        <div class="workflow-step">
+          <div class="step-label">Step 2 — AI Agent</div>
+          <div class="step-desc">Groq-powered LLaMA 3.1 agent activates and starts reasoning</div>
+        </div>
+        <div class="workflow-step">
+          <div class="step-label">Step 3 — Calendar</div>
+          <div class="step-desc">Checks Google Calendar for schedule conflicts (<code style="font-family:'DM Mono',monospace;font-size:12px;color:var(--accent)">checkCalendar</code>)</div>
+        </div>
+        <div class="workflow-step">
+          <div class="step-label">Step 4 — Weather</div>
+          <div class="step-desc">Fetches live Karachi weather via OpenWeatherMap (<code style="font-family:'DM Mono',monospace;font-size:12px;color:var(--accent)">getWeather</code>)</div>
+        </div>
+        <div class="workflow-step">
+          <div class="step-label">Step 5 — Routes</div>
+          <div class="step-desc">Reads running routes from Google Sheets database (<code style="font-family:'DM Mono',monospace;font-size:12px;color:var(--accent)">getHikeList</code>)</div>
+        </div>
+        <div class="workflow-step">
+          <div class="step-label">Step 6 — Decision</div>
+          <div class="step-desc">AI decides if conditions are good for running today</div>
+        </div>
+        <div class="workflow-step">
+          <div class="step-label">Step 7 — Email</div>
+          <div class="step-desc">Sends personalized Gmail recommendation (<code style="font-family:'DM Mono',monospace;font-size:12px;color:var(--accent)">sendMessage</code>)</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TOOLS -->
+    <section id="tools">
+      <div class="section-label">
+        <span class="section-num">04</span>
+        <h2>Tools Used</h2>
+      </div>
+      <div class="tools-grid stagger">
+        <div class="tool-card">
+          <div class="tool-icon">⏰</div>
+          <div>
+            <div class="tool-name">Schedule Trigger</div>
+            <div class="tool-desc">Starts automation at the chosen time — like an alarm clock for workflows.</div>
+          </div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-icon">🧠</div>
+          <div>
+            <div class="tool-name">Groq Chat Model</div>
+            <div class="tool-desc">AI provider using <code style="font-family:'DM Mono',monospace;font-size:12px">llama-3.1-8b-instant</code> — fast reasoning model.</div>
+          </div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-icon">💾</div>
+          <div>
+            <div class="tool-name">Simple Memory</div>
+            <div class="tool-desc">Stores previous conversation context — short-term memory for the agent.</div>
+          </div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-icon">📅</div>
+          <div>
+            <div class="tool-name">Google Calendar API</div>
+            <div class="tool-desc">Checks schedule for conflicts. Tool name: <code style="font-family:'DM Mono',monospace;font-size:12px">checkCalendar</code></div>
+          </div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-icon">🌤️</div>
+          <div>
+            <div class="tool-name">OpenWeatherMap API</div>
+            <div class="tool-desc">Fetches live Karachi weather. Tool name: <code style="font-family:'DM Mono',monospace;font-size:12px">getWeather</code></div>
+          </div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-icon">📊</div>
+          <div>
+            <div class="tool-name">Google Sheets API</div>
+            <div class="tool-desc">Used as a beginner-friendly database for routes. Tool name: <code style="font-family:'DM Mono',monospace;font-size:12px">getHikeList</code></div>
+          </div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-icon">📧</div>
+          <div>
+            <div class="tool-name">Gmail API</div>
+            <div class="tool-desc">Sends the final email recommendation. Tool name: <code style="font-family:'DM Mono',monospace;font-size:12px">sendMessage</code></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COMMANDS -->
+    <section id="commands">
+      <div class="section-label">
+        <span class="section-num">05</span>
+        <h2>Commands Used</h2>
+      </div>
+      <h3>Start n8n</h3>
+      <div class="code-block"><span class="code-comment"># Either of these works:</span>
+n8n
+npx n8n</div>
+      <h3>Google Cloud Setup</h3>
+      <div class="code-block"><span class="code-comment"># Project created:</span>
+n8n Automation
+
+<span class="code-comment"># APIs enabled:</span>
+Google Calendar API
+Google Sheets API
+Google Drive API
+Gmail API
+
+<span class="code-comment"># OAuth credentials created via Google Cloud Console</span>
+<span class="code-comment"># Redirect URI set to:</span>
+http://localhost:5678/rest/oauth2-credential/callback</div>
+    </section>
+
+    <!-- ERRORS & FIXES -->
+    <section id="errors">
+      <div class="section-label">
+        <span class="section-num">06</span>
+        <h2>Errors &amp; Fixes</h2>
+      </div>
+      <p style="color:var(--muted);margin-bottom:24px">Every error encountered during setup — with root cause and fix.</p>
+
+      <div class="error-card">
+        <span class="error-badge">ERR 01</span>
+        <div>
+          <div class="error-title">OpenAI Quota Exceeded</div>
+          <div class="error-detail"><strong>Cause:</strong> No credits or rate limits hit on OpenAI account.</div>
+          <span class="fix-badge">✓ Fix — Switched to Groq as AI provider</span>
+        </div>
+      </div>
+
+      <div class="error-card">
+        <span class="error-badge">ERR 02</span>
+        <div>
+          <div class="error-title">Groq Old Model Deprecated</div>
+          <div class="error-detail"><strong>Cause:</strong> Previously specified model no longer available.</div>
+          <span class="fix-badge">✓ Fix — Used <code style="font-family:'DM Mono',monospace">llama-3.1-8b-instant</code></span>
+        </div>
+      </div>
+
+      <div class="error-card">
+        <span class="error-badge">ERR 03</span>
+        <div>
+          <div class="error-title">Google App Not Verified</div>
+          <div class="error-detail"><strong>Cause:</strong> App is in testing mode and Gmail account wasn't added as a test user.</div>
+          <span class="fix-badge">✓ Fix — Added Gmail as Test User in OAuth consent screen</span>
+        </div>
+      </div>
+
+      <div class="error-card">
+        <span class="error-badge">ERR 04</span>
+        <div>
+          <div class="error-title">Invalid JavaScript Origin</div>
+          <div class="error-detail"><strong>Cause:</strong> Used callback path as the Authorized JavaScript Origin (wrong field).</div>
+          <div class="code-block" style="margin:10px 0;font-size:12px">Origin:   http://localhost:5678
+Redirect: http://localhost:5678/rest/oauth2-credential/callback</div>
+          <span class="fix-badge">✓ Fix — Set Origin and Redirect URI to correct separate values</span>
+        </div>
+      </div>
+
+      <div class="error-card">
+        <span class="error-badge">ERR 05</span>
+        <div>
+          <div class="error-title">Client Authentication Failed</div>
+          <div class="error-detail"><strong>Cause:</strong> Wrong or expired Client Secret entered.</div>
+          <span class="fix-badge">✓ Fix — Generated a new Client Secret from Google Cloud Console</span>
+        </div>
+      </div>
+
+      <div class="error-card">
+        <span class="error-badge">ERR 06</span>
+        <div>
+          <div class="error-title">Google Drive API Disabled</div>
+          <div class="error-detail"><strong>Cause:</strong> Sheets' file picker internally uses the Drive API — which was not enabled.</div>
+          <span class="fix-badge">✓ Fix — Enabled Google Drive API in Google Cloud Console</span>
+        </div>
+      </div>
+
+      <div class="error-card">
+        <span class="error-badge">ERR 07</span>
+        <div>
+          <div class="error-title">Gmail API Disabled</div>
+          <div class="error-detail"><strong>Cause:</strong> Gmail API was not activated in the Google Cloud project.</div>
+          <span class="fix-badge">✓ Fix — Enabled Gmail API in Google Cloud Console</span>
+        </div>
+      </div>
+
+      <div class="error-card">
+        <span class="error-badge">ERR 08</span>
+        <div>
+          <div class="error-title">sessionId Undefined</div>
+          <div class="error-detail"><strong>Cause:</strong> Schedule Trigger has no chat session — memory node couldn't get a sessionId.</div>
+          <span class="fix-badge">✓ Fix — Used a static memory key instead of dynamic session</span>
+        </div>
+      </div>
+
+      <div class="error-card">
+        <span class="error-badge">ERR 09</span>
+        <div>
+          <div class="error-title">Tool Name Mismatch</div>
+          <div class="error-detail"><strong>Cause:</strong> AI prompt expected tool name <code style="font-family:'DM Mono',monospace;font-size:12px">checkCalendar</code> but the node had a typo.</div>
+          <span class="fix-badge">✓ Fix — Renamed node to exactly match prompt tool name</span>
+        </div>
+      </div>
+
+      <div class="error-card">
+        <span class="error-badge">ERR 10</span>
+        <div>
+          <div class="error-title">Too Many Requests</div>
+          <div class="error-detail"><strong>Cause:</strong> API rate limits hit from repeated testing in quick succession.</div>
+          <span class="fix-badge">✓ Fix — Waited and reran the workflow</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- SUCCESS -->
+    <div class="success-banner">
+      <div class="success-emoji">✅</div>
+      <div class="success-title">Final Success</div>
+      <p class="success-desc">Email was successfully sent automatically. The full AI workflow — from trigger to calendar check to weather to email — worked end to end.</p>
+    </div>
+
+    <!-- LEARNINGS -->
+    <section id="learnings">
+      <div class="section-label">
+        <span class="section-num">07</span>
+        <h2>What I Learned</h2>
+      </div>
+
+      <h3>Technically</h3>
+      <div style="margin-bottom:32px">
+        <div class="learning-item">
+          <div class="learning-icon">🔧</div>
+          <div class="learning-text">
+            <strong>APIs need enabling individually</strong>
+            <span>Google APIs are separate switches — even related services like Sheets and Drive need to be turned on independently.</span>
+          </div>
+        </div>
+        <div class="learning-item">
+          <div class="learning-icon">🔗</div>
+          <div class="learning-text">
+            <strong>OAuth needs exact URLs</strong>
+            <span>One wrong character in a redirect URI breaks the entire login flow. No tolerance for typos.</span>
+          </div>
+        </div>
+        <div class="learning-item">
+          <div class="learning-icon">🏷️</div>
+          <div class="learning-text">
+            <strong>Naming matters</strong>
+            <span>AI tool names in the prompt must match node names exactly — case-sensitive, character-perfect.</span>
+          </div>
+        </div>
+        <div class="learning-item">
+          <div class="learning-icon">🐛</div>
+          <div class="learning-text">
+            <strong>Real projects require debugging</strong>
+            <span>Errors aren't failures — they're part of the process. Every setup involves struggle and iteration.</span>
+          </div>
+        </div>
+      </div>
+
+      <h3>Professionally</h3>
+      <div class="concepts-grid stagger" style="margin-top:16px">
+        <div class="concept-card">
+          <div class="concept-icon" style="background:rgba(124,58,237,0.12)">🔁</div>
+          <div class="concept-term">Connecting Services</div>
+          <div class="concept-def">How different APIs and platforms talk to each other through credentials and HTTP calls.</div>
+        </div>
+        <div class="concept-card">
+          <div class="concept-icon" style="background:rgba(6,182,212,0.12)">🤖</div>
+          <div class="concept-term">AI Automation Systems</div>
+          <div class="concept-def">Building workflows where AI agents reason and act — not just respond to chat.</div>
+        </div>
+        <div class="concept-card">
+          <div class="concept-icon" style="background:rgba(16,185,129,0.12)">🔐</div>
+          <div class="concept-term">OAuth Flows</div>
+          <div class="concept-def">How secure permission-based login systems work under the hood.</div>
+        </div>
+        <div class="concept-card">
+          <div class="concept-icon" style="background:rgba(245,158,11,0.12)">🛠️</div>
+          <div class="concept-term">Debugging Real Software</div>
+          <div class="concept-def">Reading error messages, finding root causes, and fixing issues in production-like environments.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BUSINESS USES -->
+    <section id="business">
+      <div class="section-label">
+        <span class="section-num">08</span>
+        <h2>Real Business Uses of n8n</h2>
+      </div>
+      <p style="color:var(--muted);margin-bottom:24px">Skills built during this journey directly apply to real client work.</p>
+      <div class="use-chips">
+        <div class="use-chip"><div class="use-chip-dot"></div>AI Receptionist</div>
+        <div class="use-chip"><div class="use-chip-dot"></div>Booking Bots</div>
+        <div class="use-chip"><div class="use-chip-dot"></div>CRM Automation</div>
+        <div class="use-chip"><div class="use-chip-dot"></div>Email Follow-up</div>
+        <div class="use-chip"><div class="use-chip-dot"></div>Lead Capture</div>
+        <div class="use-chip"><div class="use-chip-dot"></div>Reminder Systems</div>
+        <div class="use-chip"><div class="use-chip-dot"></div>WhatsApp Assistant</div>
+        <div class="use-chip"><div class="use-chip-dot"></div>HR Automation</div>
+        <div class="use-chip"><div class="use-chip-dot"></div>Reporting Dashboards</div>
+      </div>
+    </section>
+
+    <!-- GROWTH SUMMARY -->
+    <section id="growth">
+      <div class="section-label">
+        <span class="section-num">09</span>
+        <h2>Growth Summary</h2>
+      </div>
+      <div class="growth-card">
+        <div class="growth-before">
+          <div class="growth-label">Before</div>
+          <div class="growth-text">Curious Beginner</div>
+        </div>
+        <div class="growth-after">
+          <div class="growth-label">After</div>
+          <div class="growth-text">Built a Real Multi-Tool AI Automation System</div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:20px;border-color:rgba(124,58,237,0.25)">
+        <p style="margin:0;color:var(--muted);font-size:15px;font-style:italic">"This was not just software setup. It was practical engineering experience. I learned how real systems communicate, fail, and get fixed."</p>
+      </div>
+    </section>
+
+    <!-- IMPORTANT FILES -->
+    <section>
+      <div class="section-label">
+        <span class="section-num" style="background:rgba(245,158,11,0.1);color:var(--yellow);border-color:rgba(245,158,11,0.3)">📁</span>
+        <h2>Important Files to Keep</h2>
+      </div>
+      <div class="tools-grid stagger">
+        <div class="tool-card">
+          <div class="tool-icon">📄</div>
+          <div>
+            <div class="tool-name">Workflow JSON</div>
+            <div class="tool-desc">Export and backup your n8n workflow so you can restore or share it.</div>
+          </div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-icon">📝</div>
+          <div>
+            <div class="tool-name">Prompt Text</div>
+            <div class="tool-desc">The AI agent system prompt defining tool names and behavior.</div>
+          </div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-icon">🔑</div>
+          <div>
+            <div class="tool-name">API Keys</div>
+            <div class="tool-desc">Groq API key, OpenWeatherMap key — stored securely.</div>
+          </div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-icon">🏗️</div>
+          <div>
+            <div class="tool-name">Google Credentials</div>
+            <div class="tool-desc">Client ID, Client Secret from Google Cloud Console project.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="footer-flame">🔥</div>
+    <div class="footer-closing">Today I didn't just study automation. I built automation.</div>
+    <div class="footer-sub">n8n Setup Journey · Karachi, Pakistan</div>
+  </footer>
+
+</body>
+</html>
