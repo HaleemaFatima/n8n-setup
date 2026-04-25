@@ -37,35 +37,11 @@ No build tools. No npm. No frameworks. Just one HTML file — open it in a brows
 
 ## 🚀 Live on GitHub Pages
 
-### Step-by-step deployment
-
-1. **Fork or clone this repo**
-   ```bash
-   git clone https://github.com/YOUR-USERNAME/n8n-journey.git
-   cd n8n-journey
+ **site is live** at:
    ```
-
-2. **Push to GitHub** (if you cloned locally)
-   ```bash
-   git add .
-   git commit -m "Initial commit"
-   git push origin main
+   https://haleemafatima.github.io/n8n-setup/
    ```
-
-3. **Enable GitHub Pages**
-   - Go to your repo on GitHub
-   - Click **Settings** → **Pages** (left sidebar)
-   - Under **Source**, select `main` branch and `/ (root)` folder
-   - Click **Save**
-
-4. **Your site is live** at:
-   ```
-   https://YOUR-USERNAME.github.io/n8n-journey
-   ```
-   *(It may take 1–2 minutes to go live after saving)*
-
-5. **Update the badge** at the top of this README — replace `YOUR-USERNAME` with your actual GitHub username.
-
+   
 ---
 
 ## ⚙️ What's Covered in the Site
