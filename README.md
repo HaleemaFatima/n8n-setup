@@ -2,7 +2,7 @@
 
 > A fully documented, beginner friendly guide to building a real AI automation system with n8n 
 
-[![Live Site](https://img.shields.io/badge/Live%20Site-View%20Now-ff6b35?style=for-the-badge&logo=github)](https://YOUR-USERNAME.github.io/n8n-journey)
+[![Live Site](https://haleemafatima.github.io/n8n-setup/)
 [![Made with n8n](https://img.shields.io/badge/Built%20with-n8n-7c3aed?style=for-the-badge)](https://n8n.io)
 [![AI Powered](https://img.shields.io/badge/AI-Groq%20%2F%20LLaMA-06b6d4?style=for-the-badge)](https://groq.com)
 
